@@ -97,20 +97,27 @@ static struct cpio_entry cpio_deserialize(struct cpio_header *dh)
 	e.st.st_rdev = pax_atoi(sizeof(dh->rdev), dh->rdev, 8);
 	e.st.st_mtim.tv_sec = pax_atoi(sizeof(dh->mtime), dh->mtime, 8);
 	e.st.st_size = pax_atoi(sizeof(dh->filesize), dh->filesize, 8);
+	e.st.st_blocks = e.st.st_size / 512;
 
 	e.namesize = pax_atoi(sizeof(dh->namesize), dh->namesize, 8);
 
 	return e;
 }
 
-int cpio_list(FILE *input, size_t firstlen, void *firstblock)
+int cpio_list(FILE *input, size_t nblocks, void *block)
 {
-	struct cpio_header *dh = firstblock;
+	struct cpio_header *dh = block;
 
-	//for (;;) {
+	for (;;) {
 		struct cpio_entry e = cpio_deserialize(dh);
-		pax_list_file(&e.st, (char*)firstblock + sizeof(*dh));
-	//}
+		pax_list_file(&e.st, (char*)block + sizeof(*dh));
+		for (blkcnt_t i = 0; i < e.st.st_blocks + 1; i++) {
+			if (fread(dh, 1, 512, input) != 512) {
+				fprintf(stderr, "pax: interrupted\n");
+				return 1;
+			}
+		}
+	}
 
 	return 0;
 }
