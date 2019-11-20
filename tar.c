@@ -66,7 +66,8 @@ static mode_t tar_mode_to_st_mode(char typeflag, const char tm[static 8])
 		break;
 
 	case CONTTYPE:
-		//m = S_IFCONT;
+		/* "some high-performance attribute" is not supported */
+		m = S_IFREG;
 		break;
 
 	default:
