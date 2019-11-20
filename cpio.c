@@ -24,10 +24,12 @@
 
 #define _XOPEN_SOURCE 700
 #include <cpio.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "pax.h"
 
@@ -109,6 +111,89 @@ int cpio_list(FILE *input, size_t firstlen, void *firstblock)
 		struct cpio_entry e = cpio_deserialize(dh);
 		pax_list_file(&e.st, (char*)firstblock + sizeof(*dh));
 	//}
+
+	return 0;
+}
+
+int cpio_main(int argc, char *argv[])
+{
+	setlocale(LC_ALL, "");
+	int c;
+
+	while ((c = getopt(argc, argv, "oip")) != -1) {
+		switch (c) {
+		case 'o':
+			// create
+			break;
+
+		case 'i':
+			// extract
+			break;
+
+		case 'p':
+			// copy?
+			break;
+
+		default:
+			return 1;
+		}
+
+		break;
+	}
+
+	for (size_t i = 2; argv[optind][i] != '\0'; i++) {
+		printf("checking %c\n", argv[optind][i]);
+		switch (argv[optind][i]) {
+		case 'a':
+			// reset atimes
+			break;
+
+		case 'B':
+			// blocksize 5120
+			break;
+
+		case 'd':
+			// create directories
+			break;
+
+		case 'c':
+			// read and write in character form for portability
+			break;
+
+		case 'r':
+			// interactively rename files
+			break;
+
+		case 't':
+			// list table of contents
+			break;
+
+		case 'u':
+			// copy unconditionally
+			break;
+
+		case 'v':
+			// verbose
+			break;
+
+		case 'l':
+			// link instead of copy, requires -p
+			break;
+
+		case 'm':
+			// reset mtime
+			break;
+
+		case 'f':
+			// ignore files in pattern
+			break;
+
+		default:
+			fprintf(stderr, "cpio: unknown option '%c'\n",
+				argv[optind][i]);
+			return 1;
+		}
+	}
 
 	return 0;
 }

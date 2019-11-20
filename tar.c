@@ -23,11 +23,13 @@
  */
 
 #define _XOPEN_SOURCE 700
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <tar.h>
+#include <unistd.h>
 
 #include "pax.h"
 
@@ -123,5 +125,88 @@ int tar_list(FILE *input, size_t firstlen, void *firstblock)
 			}
 		}
 	}
+	return 0;
+}
+
+int tar_main(int argc, char *argv[])
+{
+	setlocale(LC_ALL, "");
+	int c;
+
+	while ((c = getopt(argc, argv, "")) != -1) {
+		return 1;
+	}
+
+	if (optind >= argc) {
+		fprintf(stderr, "tar: missing operands\n");
+		return 1;
+	}
+
+	char buf[512];
+
+	switch (argv[optind][0]) {
+	case 'r':
+		// append
+		break;
+
+	case 'x':
+		// extract
+		break;
+
+	case 't':
+		fread(buf, 1, sizeof(buf), stdin);
+		return tar_list(stdin, 512, buf);
+		break;
+
+	case 'u':
+		// update
+		break;
+
+	case 'c':
+		// create
+		break;
+
+	default:
+		fprintf(stderr, "tar: unknown function '%c'\n",
+			argv[optind][0]);
+		return 1;
+	}
+
+	for (size_t i = 1; argv[optind][i] != '\0'; i++) {
+		switch(argv[optind][i]) {
+		case 'v':
+			// verbose
+			break;
+
+		case 'w':
+			// wait for confirmation
+			break;
+
+		case 'f':
+			// file = next operand
+			break;
+
+		case 'b':
+			// blocking factor = next operand
+			break;
+
+		case 'l':
+			// report if links are unresolved
+			break;
+
+		case 'm':
+			// ignore mtimes
+			break;
+
+		case 'o':
+			// assign user and group to getuid() and getgid()
+			break;
+
+		default:
+			fprintf(stderr, "unknown key '%c'\n", argv[optind][i]);
+			return 1;
+		}
+	}
+
 	return 0;
 }

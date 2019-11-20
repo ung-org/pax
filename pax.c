@@ -25,6 +25,7 @@
 #define _XOPEN_SOURCE 700
 #include <cpio.h>
 #include <errno.h>
+#include <libgen.h>
 #include <locale.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -82,7 +83,7 @@ int pax_list(FILE *input)
 	return 1;
 }
 
-int main(int argc, char *argv[])
+int pax_main(int argc, char *argv[])
 {
 	unsigned int flags = 0;
 	//unsigned int blocksize = 0;
@@ -200,6 +201,8 @@ int main(int argc, char *argv[])
 	if (mode == PAX_LIST) {
 		return pax_list(stdin);
 	}
+
+	return 1;
 }
 
 void pax_list_file(struct stat *st, const char *name)
@@ -266,4 +269,18 @@ uintmax_t pax_atoi(size_t n, const char _s[static n], int base)
 	char s[64] = { 0 };
 	strncpy(s, _s, n);
 	return strtoumax(s, NULL, base);
+}
+
+int main(int argc, char *argv[])
+{
+	char *base = basename(argv[0]);
+	if (!strcmp(base, "tar")) {
+		return tar_main(argc, argv);
+	}
+
+	if (!strcmp(base, "cpio")) {
+		return cpio_main(argc, argv);
+	}
+
+	return pax_main(argc, argv);
 }

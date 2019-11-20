@@ -23,6 +23,7 @@
  */
 
 #include <stdint.h>
+#include <sys/stat.h>
 
 #define TAR_HEADER_SIZE 512
 
@@ -69,5 +70,8 @@ int tar_list(FILE *input, size_t firstlen, void *firstblock);
 
 void pax_list_file(struct stat *st, const char *filename);
 uintmax_t pax_atoi(size_t n, const char s[static n], int base);
+
+int tar_main(int argc, char *argv[]);
+int cpio_main(int argc, char *argv[]);
 
 extern const size_t cpio_header_size;
