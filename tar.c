@@ -101,13 +101,27 @@ static struct stat tar_header_to_stat(struct tar_header *th)
 	st.st_gid = pax_atoi(sizeof(th->gid), th->gid, 8);
 	st.st_size = pax_atoi(sizeof(th->size), th->size, 8);
 	st.st_mtim.tv_sec = pax_atoi(sizeof(th->mtime), th->mtime, 8);
+	st.st_blocks = st.st_size / 512 + 1;
 	return st;
 }
 
 int tar_list(FILE *input, size_t firstlen, void *firstblock)
 {
-	struct tar_header *th = firstblock;
-	struct stat st = tar_header_to_stat(th);
-	pax_list_file(&st, th->name);
+	char zero[512] = {0};
+
+	(void)firstlen;
+	for (;;) {
+		struct tar_header *th = firstblock;
+		struct stat st = tar_header_to_stat(th);
+		pax_list_file(&st, th->name);
+		for (blkcnt_t i = 0; i < st.st_blocks + 1; i++) {
+			if (fread(firstblock, 1, 512, input) != 512) {
+				fprintf(stderr, "pax: error reading input\n");
+				return 1;
+			} else if (memcmp(firstblock, zero, 512) == 0) {
+				return 0;
+			}
+		}
+	}
 	return 0;
 }
