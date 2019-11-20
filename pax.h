@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-#define TAR_HEADER_SIZE 512
+#define PAX_BLOCK_SIZE 512
 
 struct tar_header {
 	char name[100];
@@ -65,8 +65,8 @@ enum pax_format {
 	PAX_FORMAT_TAR,
 };
 
-int cpio_list(FILE *input, size_t firstlen, void *firstblock);
-int tar_list(FILE *input, size_t firstlen, void *firstblock);
+int cpio_list(FILE *input, size_t nblocks, void *firstblock);
+int tar_list(FILE *input, size_t nblocks, void *firstblock);
 
 void pax_list_file(struct stat *st, const char *filename);
 uintmax_t pax_atoi(size_t n, const char s[static n], int base);

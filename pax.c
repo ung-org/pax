@@ -37,41 +37,40 @@
 
 #include "pax.h"
 
-enum pax_format pax_identify(size_t n, void *header)
+static enum pax_format pax_identify(void *header)
 {
-	if (n < sizeof(MAGIC)) {
-		return PAX_FORMAT_UNKNOWN;
+	if (memcmp(header, MAGIC, sizeof(MAGIC) - 1) == 0) {
+		return PAX_FORMAT_CPIO;
 	}
 
-	if (n >= cpio_header_size) {
-		if (memcmp(header, MAGIC, sizeof(MAGIC) - 1) == 0) {
-			return PAX_FORMAT_CPIO;
+	struct tar_header *th = header;
+	if (memcmp(th->magic, TMAGIC, TMAGLEN) == 0) {
+		if (th->typeflag[0] == 'x' || th->typeflag[0] == 'g') {
+			return PAX_FORMAT_PAX;
 		}
-	}
-
-	/* TODO: differentiate between tar and pax format */
-	if (n >= TAR_HEADER_SIZE) {
-		struct tar_header *th = header;
-		if (memcmp(th->magic, TMAGIC, TMAGLEN) == 0) {
-			return PAX_FORMAT_TAR;
-		}
+		return PAX_FORMAT_TAR;
 	}
 
 	fprintf(stderr, "pax: unknown archive format\n");
 	return PAX_FORMAT_UNKNOWN;
 }
 
-int pax_list(FILE *input)
+static int pax_list(FILE *input)
 {
-	char header[TAR_HEADER_SIZE];
+	char header[PAX_BLOCK_SIZE];
 	int nread = fread(header, 1, sizeof(header), input);
+	if (nread != sizeof(header)) {
+		fprintf(stderr, "pax: input truncated\n");
+		return 1;
+	}
 
-	switch (pax_identify(nread, header)) {
+	switch (pax_identify(header)) {
 	case PAX_FORMAT_CPIO:
 		return cpio_list(input, nread, header);
 		break;
 
 	case PAX_FORMAT_TAR:
+	case PAX_FORMAT_PAX:
 		return tar_list(input, nread, header);
 		break;
 
